@@ -1,7 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "src/key_event_t.h"
 #include "src/key_handler.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifdef __WIN32__
 #include <windows.h>
@@ -12,25 +12,40 @@ void err_exit(char *msg) {
   exit(EXIT_FAILURE);
 }
 
-void restore_modes(void *stdin_handle, unsigned long console_mode_in,
-                   void *stdout_handle, unsigned long console_mode_out) {
-  if (!SetConsoleMode(stdin_handle, console_mode_in)) {
+struct reset_handle_params {
+  void *stdin_handle;
+  unsigned long console_mode_in;
+  void *stdout_handle;
+  unsigned long console_mode_out;
+};
+
+void reset_handles_and_exit(struct reset_handle_params *given) {
+  static struct reset_handle_params *local = NULL;
+  if (given != NULL) {
+    local = given;
+    return;
+  }
+  if (local == NULL) {
+    return;
+  }
+  if (!SetConsoleMode(local->stdin_handle, local->console_mode_in)) {
     err_exit("could not reset console input mode");
   }
-  if (!SetConsoleMode(stdout_handle, console_mode_out)) {
+  if (!SetConsoleMode(local->stdout_handle, local->console_mode_out)) {
     err_exit("could not reset console output mode");
   }
+  exit(EXIT_SUCCESS);
 }
 
 int main(int args, char **argv) {
 
   size_t in_buffer_size = 4;
 
-  void *stdin_handle;
-  unsigned long read_count;
-  unsigned long console_mode_in;
+  void *stdin_handle = NULL;
+  unsigned long read_count = 0;
+  unsigned long console_mode_in = 0;
   INPUT_RECORD input_buffer[in_buffer_size];
-  unsigned long original_console_mode_in;
+  unsigned long original_console_mode_in = 0;
 
   /*
    * input setup
@@ -53,9 +68,9 @@ int main(int args, char **argv) {
   /*
    * output setup
    */
-  void *stdout_handle;
-  unsigned long original_console_mode_out;
-  unsigned long console_mode_out;
+  void *stdout_handle = NULL;
+  unsigned long original_console_mode_out = 0;
+  unsigned long console_mode_out = 0;
 
   stdout_handle = GetStdHandle(STD_OUTPUT_HANDLE);
   if (stdout_handle == INVALID_HANDLE_VALUE) {
@@ -72,9 +87,20 @@ int main(int args, char **argv) {
     err_exit("could not set console output mode");
   }
 
+  struct reset_handle_params reset_params = {
+      .stdin_handle = stdin_handle,
+      .console_mode_in = console_mode_in,
+      .stdout_handle = stdout_handle,
+      .console_mode_out = console_mode_out,
+  };
+
+  reset_handles_and_exit(&reset_params);
+  void (*exit_callback)(void*) = (void (*) (void*)) &reset_handles_and_exit;
+
   /*
    * handling of input
    */
+  vt_init();
   while (1) {
     if (!ReadConsoleInput(stdin_handle, input_buffer, in_buffer_size,
                           &read_count)) {
@@ -84,14 +110,8 @@ int main(int args, char **argv) {
       INPUT_RECORD event = input_buffer[i];
       switch (input_buffer[i].EventType) {
       case KEY_EVENT:
-        if (event.Event.KeyEvent.uChar.AsciiChar == 'X') {
-          printf("exit...");
-          restore_modes(stdin_handle, original_console_mode_in, stdout_handle,
-                        original_console_mode_out);
-          return EXIT_SUCCESS;
-        }
         if (event.Event.KeyEvent.bKeyDown) {
-            handle_key_event(to_key_event_t(event));
+          handle_key_event(to_key_event_t(event), exit_callback);
         }
         break;
       default:
