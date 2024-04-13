@@ -6,16 +6,18 @@
 
 #define CTRL_C 3
 #define CHAR_A 65
+#define CHAR_B 66
+#define CHAR_C 67
+#define CHAR_D 68
 #define CHAR_Z 90
 #define CHAR_a 97
 #define CHAR_z 122
 #define CHAR_c 99
 #define SHIFT 16
+#define SPACE 92
 #define CTRL 8
-#define ARROW_UP 72
-#define ARROW_DOWN 80
-#define ARROW_LEFT 75
-#define ARROW_RIGHT 77
+#define CTRL_BRACKET_SO 27 // bracket square open
+#define BRACKET_SO 91      // bracket square open
 
 typedef struct cursor_pos {
   int x;
@@ -28,6 +30,9 @@ void vt_clear_screen() { printf(CSI "2J"); }
 void vt_set_cursor_pos(cursor_pos_t pos) { printf(CSI "%d;%df", pos.y, pos.x); }
 void vt_erase_to_EOL() { printf(CSI "0K"); }
 void move_cursor_up() {
+  if (cpos.x == 0) {
+    return;
+  }
   cpos.x--;
   vt_set_cursor_pos(cpos);
 }
@@ -36,6 +41,9 @@ void move_cursor_down() {
   vt_set_cursor_pos(cpos);
 }
 void move_cursor_left() {
+  if (cpos.y == 0) {
+    return;
+  }
   cpos.y--;
   vt_set_cursor_pos(cpos);
 }
@@ -61,28 +69,45 @@ void report_events(key_event_t *events, int event_count) {
 
 void handle_key_event(key_event_t *events, int event_count,
                       void (*exit_callback)(void *)) {
-  vt_erase_to_EOL();
-  printf("%d", event_count);
-  if (event_count == 1) {
+  if (event_count == 1 && events[0].is_key_down) {
     key_event_t event = events[0];
 
     if (event.key == CTRL_C) {
       exit_callback(NULL);
       return;
     } else if ((event.key >= CHAR_A && event.key <= CHAR_Z) ||
-               (event.key >= CHAR_a && event.key <= CHAR_z)) {
+               (event.key >= CHAR_a && event.key <= CHAR_z) ||
+               event.key == SPACE) {
       cpos.x++;
       printf("%c", event.key);
       report_events(events, event_count);
       return;
     }
 
-  } else if (event_count == 2) {
+  } else if (event_count == 3) {
     key_event_t event_fst = events[0];
     key_event_t event_snd = events[1];
-    if (event_fst.key == CTRL && event_snd.key == CHAR_c) {
-      exit_callback(NULL);
+    key_event_t event_trd = events[2];
+    if (!(event_fst.is_key_down && event_snd.is_key_down &&
+          event_trd.is_key_down)) {
       return;
+    }
+
+    if (event_fst.key == CTRL_BRACKET_SO && event_snd.key == BRACKET_SO &&
+        event_trd.key == CHAR_A) { // arrow left
+      move_cursor_left();
+    } else if (event_fst.key == CTRL_BRACKET_SO &&
+               event_snd.key == BRACKET_SO &&
+               event_trd.key == CHAR_B) { // arrow right
+      move_cursor_right();
+    } else if (event_fst.key == CTRL_BRACKET_SO &&
+               event_snd.key == BRACKET_SO &&
+               event_trd.key == CHAR_C) { // arrow down
+      move_cursor_down();
+    } else if (event_fst.key == CTRL_BRACKET_SO &&
+               event_snd.key == BRACKET_SO &&
+               event_trd.key == CHAR_D) { // arrow up
+      move_cursor_up();
     }
   }
 
