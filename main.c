@@ -97,11 +97,11 @@ int main(int args, char **argv) {
   reset_handles_and_exit(&reset_params);
   void (*exit_callback)(void *) = (void (*)(void *)) & reset_handles_and_exit;
 
+  terminal_init();
+
   /*
    * handling of input
    */
-  vt_init();
-
   key_event_t events[in_buffer_size];
   int key_event_index = 0;
   while (1) {

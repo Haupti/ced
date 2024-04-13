@@ -1,12 +1,6 @@
 #include "key_event_t.h"
 #include <stdio.h>
-
-/*
- * control keys
- */
-#define ESC "\x1b"
-#define CSI ESC "["
-
+#include "vt.h"
 /*
  * keys that are represented by one key-event
  */
@@ -70,40 +64,7 @@ key3_event parse_key3_event(key_event_t *events) {
   return (key3_event){.is_key_down = is_key_down, .key = key};
 }
 
-typedef struct cursor_pos {
-  int x;
-  int y;
-} cursor_pos_t;
-
-cursor_pos_t cpos = {.x = 1, .y = 1};
-
-void vt_clear_screen() { printf(CSI "2J"); }
-void vt_set_cursor_pos(cursor_pos_t pos) { printf(CSI "%d;%df", pos.y, pos.x); }
-void vt_erase_to_EOL() { printf(CSI "0K"); }
-void move_cursor_up() {
-  if (cpos.x == 0) {
-    return;
-  }
-  cpos.x--;
-  vt_set_cursor_pos(cpos);
-}
-void move_cursor_down() {
-  cpos.x++;
-  vt_set_cursor_pos(cpos);
-}
-void move_cursor_left() {
-  if (cpos.y == 0) {
-    return;
-  }
-  cpos.y--;
-  vt_set_cursor_pos(cpos);
-}
-void move_cursor_right() {
-  cpos.y++;
-  vt_set_cursor_pos(cpos);
-}
-
-void vt_init() {
+void terminal_init() {
   cpos = (cursor_pos_t){.x = 1, .y = 1};
   vt_clear_screen();
   vt_set_cursor_pos(cpos);
@@ -144,16 +105,16 @@ void handle_key_event(key_event_t *events, int event_count,
 
     switch (key_event.key) {
     case ARROW_UP:
-      move_cursor_up();
+      vt_move_cursor_up();
       break;
     case ARROW_DOWN:
-      move_cursor_down();
+      vt_move_cursor_down();
       break;
     case ARROW_LEFT:
-      move_cursor_left();
+      vt_move_cursor_left();
       break;
     case ARROW_RIGHT:
-      move_cursor_right();
+      vt_move_cursor_right();
       break;
     default:
       break;
