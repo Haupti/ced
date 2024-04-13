@@ -1,9 +1,15 @@
 #include "key_event_t.h"
 #include <stdio.h>
 
+/*
+ * control keys
+ */
 #define ESC "\x1b"
 #define CSI ESC "["
 
+/*
+ * keys that are represented by one key-event
+ */
 #define CTRL_C 3
 #define CHAR_A 65
 #define CHAR_B 66
@@ -18,6 +24,51 @@
 #define CTRL 8
 #define CTRL_BRACKET_SO 27 // bracket square open
 #define BRACKET_SO 91      // bracket square open
+
+/*
+ * keys that are represented by three individual key-events
+ */
+enum key3 {
+  ARROW_UP,
+  ARROW_DOWN,
+  ARROW_LEFT,
+  ARROW_RIGHT,
+  NOT_RECOGNIZED,
+};
+
+typedef struct key3_event {
+  enum key3 key;
+  int is_key_down;
+} key3_event;
+
+key3_event parse_key3_event(key_event_t *events) {
+  key_event_t event_fst = events[0];
+  key_event_t event_snd = events[1];
+  key_event_t event_trd = events[2];
+
+  enum key3 key;
+  int is_key_down = 0;
+  if (!(event_fst.is_key_down && event_snd.is_key_down &&
+        event_trd.is_key_down)) {
+    is_key_down = 1;
+  }
+
+  if (event_fst.key == CTRL_BRACKET_SO && event_snd.key == BRACKET_SO &&
+      event_trd.key == CHAR_A) {
+    key = ARROW_LEFT;
+  } else if (event_fst.key == CTRL_BRACKET_SO && event_snd.key == BRACKET_SO &&
+             event_trd.key == CHAR_B) {
+    key = ARROW_RIGHT;
+  } else if (event_fst.key == CTRL_BRACKET_SO && event_snd.key == BRACKET_SO &&
+             event_trd.key == CHAR_C) {
+    key = ARROW_DOWN;
+  } else if (event_fst.key == CTRL_BRACKET_SO && event_snd.key == BRACKET_SO &&
+             event_trd.key == CHAR_D) {
+    key = ARROW_LEFT;
+  }
+  key = NOT_RECOGNIZED;
+  return (key3_event){.is_key_down = is_key_down, .key = key};
+}
 
 typedef struct cursor_pos {
   int x;
@@ -85,29 +136,27 @@ void handle_key_event(key_event_t *events, int event_count,
     }
 
   } else if (event_count == 3) {
-    key_event_t event_fst = events[0];
-    key_event_t event_snd = events[1];
-    key_event_t event_trd = events[2];
-    if (!(event_fst.is_key_down && event_snd.is_key_down &&
-          event_trd.is_key_down)) {
+    key3_event key_event = parse_key3_event(events);
+
+    if (!key_event.is_key_down) {
       return;
     }
 
-    if (event_fst.key == CTRL_BRACKET_SO && event_snd.key == BRACKET_SO &&
-        event_trd.key == CHAR_A) { // arrow left
-      move_cursor_left();
-    } else if (event_fst.key == CTRL_BRACKET_SO &&
-               event_snd.key == BRACKET_SO &&
-               event_trd.key == CHAR_B) { // arrow right
-      move_cursor_right();
-    } else if (event_fst.key == CTRL_BRACKET_SO &&
-               event_snd.key == BRACKET_SO &&
-               event_trd.key == CHAR_C) { // arrow down
-      move_cursor_down();
-    } else if (event_fst.key == CTRL_BRACKET_SO &&
-               event_snd.key == BRACKET_SO &&
-               event_trd.key == CHAR_D) { // arrow up
+    switch (key_event.key) {
+    case ARROW_UP:
       move_cursor_up();
+      break;
+    case ARROW_DOWN:
+      move_cursor_down();
+      break;
+    case ARROW_LEFT:
+      move_cursor_left();
+      break;
+    case ARROW_RIGHT:
+      move_cursor_right();
+      break;
+    default:
+      break;
     }
   }
 
