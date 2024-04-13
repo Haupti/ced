@@ -1,6 +1,7 @@
+#include "cursor.h"
 #include "key_event_t.h"
-#include <stdio.h>
 #include "vt.h"
+#include <stdio.h>
 /*
  * keys that are represented by one key-event
  */
@@ -42,41 +43,40 @@ key3_event parse_key3_event(key_event_t *events) {
 
   enum key3 key;
   int is_key_down = 0;
-  if (!(event_fst.is_key_down && event_snd.is_key_down &&
-        event_trd.is_key_down)) {
+  if (event_fst.is_key_down && event_snd.is_key_down && event_trd.is_key_down) {
     is_key_down = 1;
   }
 
   if (event_fst.key == CTRL_BRACKET_SO && event_snd.key == BRACKET_SO &&
       event_trd.key == CHAR_A) {
-    key = ARROW_LEFT;
+    key = ARROW_DOWN;
   } else if (event_fst.key == CTRL_BRACKET_SO && event_snd.key == BRACKET_SO &&
              event_trd.key == CHAR_B) {
-    key = ARROW_RIGHT;
+    key = ARROW_UP;
   } else if (event_fst.key == CTRL_BRACKET_SO && event_snd.key == BRACKET_SO &&
              event_trd.key == CHAR_C) {
-    key = ARROW_DOWN;
+    key = ARROW_RIGHT;
   } else if (event_fst.key == CTRL_BRACKET_SO && event_snd.key == BRACKET_SO &&
              event_trd.key == CHAR_D) {
     key = ARROW_LEFT;
+  } else {
+    key = NOT_RECOGNIZED;
   }
-  key = NOT_RECOGNIZED;
   return (key3_event){.is_key_down = is_key_down, .key = key};
 }
 
 void terminal_init() {
-  cpos = (cursor_pos_t){.x = 1, .y = 1};
+  set_cursor(create_cursor_pos(1, 1));
   vt_clear_screen();
-  vt_set_cursor_pos(cpos);
 }
 
 void report_events(key_event_t *events, int event_count) {
-  vt_set_cursor_pos((cursor_pos_t){1, 50});
+  cursor_pos_t saved = set_cursor(create_cursor_pos(1, 50));
   vt_erase_to_EOL();
   for (int i = 0; i < event_count; i++) {
     printf("[%d,%lu]", events[i].key, events[i].ctrl_key_state);
   }
-  vt_set_cursor_pos(cpos);
+  set_cursor(saved);
 }
 
 void handle_key_event(key_event_t *events, int event_count,
@@ -90,7 +90,7 @@ void handle_key_event(key_event_t *events, int event_count,
     } else if ((event.key >= CHAR_A && event.key <= CHAR_Z) ||
                (event.key >= CHAR_a && event.key <= CHAR_z) ||
                event.key == SPACE) {
-      cpos.x++;
+      x_inc_cursor();
       printf("%c", event.key);
       report_events(events, event_count);
       return;
@@ -105,16 +105,16 @@ void handle_key_event(key_event_t *events, int event_count,
 
     switch (key_event.key) {
     case ARROW_UP:
-      vt_move_cursor_up();
+      move_cursor_up(1);
       break;
     case ARROW_DOWN:
-      vt_move_cursor_down();
+      move_cursor_down(1);
       break;
     case ARROW_LEFT:
-      vt_move_cursor_left();
+      move_cursor_left(1);
       break;
     case ARROW_RIGHT:
-      vt_move_cursor_right();
+      move_cursor_right(1);
       break;
     default:
       break;
