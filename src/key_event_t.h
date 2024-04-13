@@ -8,7 +8,7 @@
 typedef struct key_event {
   int is_key_down;
   unsigned short repeat_count;
-  char key_value;
+  char key;
   unsigned long ctrl_key_state;
 } key_event_t;
 

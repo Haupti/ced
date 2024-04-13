@@ -95,30 +95,28 @@ int main(int args, char **argv) {
   };
 
   reset_handles_and_exit(&reset_params);
-  void (*exit_callback)(void*) = (void (*) (void*)) &reset_handles_and_exit;
+  void (*exit_callback)(void *) = (void (*)(void *)) & reset_handles_and_exit;
 
   /*
    * handling of input
    */
   vt_init();
+
+  key_event_t events[in_buffer_size];
+  int key_event_index = 0;
   while (1) {
+    key_event_index = 0;
     if (!ReadConsoleInput(stdin_handle, input_buffer, in_buffer_size,
                           &read_count)) {
       err_exit("reading console input failed");
     }
     for (int i = 0; i < read_count; i++) {
-      INPUT_RECORD event = input_buffer[i];
-      switch (input_buffer[i].EventType) {
-      case KEY_EVENT:
-        if (event.Event.KeyEvent.bKeyDown) {
-          handle_key_event(to_key_event_t(event), exit_callback);
-        }
-        break;
-      default:
-        printf("...");
-        break;
+      if (input_buffer[i].EventType == KEY_EVENT) {
+        events[key_event_index] = to_key_event_t(input_buffer[i]);
+        key_event_index++;
       }
     }
+    handle_key_event(events, key_event_index, exit_callback);
   }
 
   return EXIT_SUCCESS;
