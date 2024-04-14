@@ -1,12 +1,13 @@
 #include "cursor.h"
-#include "mirror.h"
 #include "key_event_t.h"
+#include "mirror.h"
 #include "vt.h"
 #include <stdio.h>
 /*
  * keys that are represented by one key-event
  */
 #define CTRL_C 3
+#define CTRL_S 19
 #define CHAR_A 65
 #define CHAR_B 66
 #define CHAR_C 67
@@ -80,7 +81,6 @@ void report_events(key_event_t *events, int event_count) {
   set_cursor(saved);
 }
 
-
 void handle_key_event(key_event_t *events, int event_count,
                       void (*exit_callback)(void *)) {
 
@@ -90,13 +90,16 @@ void handle_key_event(key_event_t *events, int event_count,
     if (event.key == CTRL_C) {
       exit_callback(NULL);
       return;
+    } else if (event.key == CTRL_S) {
+      mirror_save_to_file();
+      return;
     } else if ((event.key >= CHAR_A && event.key <= CHAR_Z) ||
                (event.key >= CHAR_a && event.key <= CHAR_z) ||
                event.key == SPACE) {
       x_inc_cursor();
       cursor_pos_t pos = get_current_cursor_pos();
       printf("%c", event.key);
-      set_char(pos.x, pos.y, event.key);
+      mirror_set_char(pos.x, pos.y, event.key);
 
       report_events(events, event_count);
       return;

@@ -13,6 +13,7 @@ typedef struct _file_mirror {
 } display_mirror;
 
 void init_display_mirror();
-void set_char(int x, int y, char c);
+void mirror_set_char(int x, int y, char c);
+void mirror_save_to_file();
 
 #endif

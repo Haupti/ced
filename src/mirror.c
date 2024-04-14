@@ -1,19 +1,34 @@
 #include "mirror.h"
 #include "error.h"
+#include "io.h"
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define INIT_COLS 128
 #define INIT_ROWS 64
 
 char *create_data(size_t size) {
-  char *data = malloc(sizeof(char) * size);
+  char *data = calloc(size, sizeof(*data));
   return data;
+}
+
+char *resize_data(char *data, size_t old_size, size_t new_size) {
+  char *ptr = realloc(data, sizeof(*ptr) * new_size);
+  if (ptr == NULL) {
+    // TODO save current mirror to swp file
+    err_exit("could not resize line, not enought memory");
+  }
+  char *end_of_data = data + old_size;
+  memset((void *)(end_of_data), 0, (size_t)new_size - old_size);
+  return ptr;
 }
 
 display_mirror *mirror;
 
-void set_char(int x, int y, char c) {
+void mirror_save_to_file() { save_to_file(*mirror); }
+
+void mirror_set_char(int x, int y, char c) {
   if (y >= mirror->len) {
     /*
      * calcuate how often you have to double the number of rows
@@ -76,7 +91,7 @@ void set_char(int x, int y, char c) {
 }
 
 void init_display_mirror() {
-  row_t *rows = malloc(sizeof(row_t) * INIT_ROWS);
+  row_t *rows = malloc(sizeof(*rows) * INIT_ROWS);
   for (int i = 0; i < INIT_ROWS; i++) {
     rows[i] = (row_t){.data = create_data(INIT_COLS), .len = INIT_COLS};
   }
