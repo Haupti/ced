@@ -2,6 +2,9 @@
 #ifndef DISPLAY_MIRROR_HEADER
 #define DISPLAY_MIRROR_HEADER
 
+#define INIT_COLS 128
+#define INIT_ROWS 64
+
 typedef struct _row_t {
   int len;
   char *data;

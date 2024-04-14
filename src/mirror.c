@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define INIT_COLS 128
-#define INIT_ROWS 64
 
 char *create_data(size_t size) {
   char *data = calloc(size, sizeof(*data));
