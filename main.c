@@ -1,5 +1,7 @@
 #include "src/key_event_t.h"
 #include "src/key_handler.h"
+#include "src/mirror.h"
+#include "src/error.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -7,10 +9,6 @@
 #include <windows.h>
 #endif
 
-void err_exit(char *msg) {
-  printf("ERROR: %s\n", msg);
-  exit(EXIT_FAILURE);
-}
 
 struct reset_handle_params {
   void *stdin_handle;
@@ -97,7 +95,11 @@ int main(int args, char **argv) {
   reset_handles_and_exit(&reset_params);
   void (*exit_callback)(void *) = (void (*)(void *)) & reset_handles_and_exit;
 
+  /*
+   * initialize
+   */
   terminal_init();
+  init_display_mirror();
 
   /*
    * handling of input

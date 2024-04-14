@@ -79,8 +79,10 @@ void report_events(key_event_t *events, int event_count) {
   set_cursor(saved);
 }
 
+
 void handle_key_event(key_event_t *events, int event_count,
                       void (*exit_callback)(void *)) {
+
   if (event_count == 1 && events[0].is_key_down) {
     key_event_t event = events[0];
 
