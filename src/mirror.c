@@ -3,7 +3,8 @@
 #include <math.h>
 #include <stdlib.h>
 
-#define INIT_COLS 80
+#define INIT_COLS 128
+#define INIT_ROWS 64
 
 char *create_data(size_t size) {
   char *data = malloc(sizeof(char) * size);
@@ -21,10 +22,11 @@ void set_char(int x, int y, char c) {
     int exponent = 1;
     int found = 0;
     while (!found) {
-      exponent++;
       if (y < (mirror->len * pow(2, exponent))) {
         found = 1;
+        break;
       }
+      exponent++;
     }
     /*
      * allocate the required number of rows
@@ -44,16 +46,18 @@ void set_char(int x, int y, char c) {
       mirror->rows[i] =
           (row_t){.data = create_data(INIT_COLS), .len = INIT_COLS};
     }
+    mirror->len = new_len;
   }
-  row_t target_row = mirror->rows[y];
-  if (x >= target_row.len) {
-    int exponent = 0;
+  if (x >= mirror->rows[y].len) {
+    row_t target_row = mirror->rows[y];
+    int exponent = 1;
     int found = 0;
     while (!found) {
-      exponent++;
       if (x < (target_row.len * pow(2, exponent))) {
         found = 1;
+        break;
       }
+      exponent++;
     }
     int old_len = target_row.len;
     int new_len = pow(2, exponent) * old_len;
@@ -68,16 +72,14 @@ void set_char(int x, int y, char c) {
     mirror->rows[y] = target_row;
   }
 
-  printf(" <%d,%d> ", mirror->rows[x].len, mirror->len);
   mirror->rows[y].data[x] = c;
 }
 
 void init_display_mirror() {
-  int rows_count = 50;
-  row_t *rows = malloc(sizeof(row_t) * rows_count);
-  for (int i = 0; i < rows_count; i++) {
+  row_t *rows = malloc(sizeof(row_t) * INIT_ROWS);
+  for (int i = 0; i < INIT_ROWS; i++) {
     rows[i] = (row_t){.data = create_data(INIT_COLS), .len = INIT_COLS};
   }
   mirror = malloc(sizeof(display_mirror));
-  *mirror = (display_mirror){.len = rows_count, .rows = rows};
+  *mirror = (display_mirror){.len = INIT_ROWS, .rows = rows};
 }

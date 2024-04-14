@@ -44,4 +44,11 @@ cursor_pos_t set_cursor(cursor_pos_t pos) {
   return prev_pos;
 }
 
-cursor_pos_t create_cursor_pos(int x, int y) { return (cursor_pos_t){.x = x, .y = y}; }
+cursor_pos_t get_current_cursor_pos() {
+  cursor_pos_t copy = (cursor_pos_t){.x = cpos.x, .y = cpos.y};
+  return copy;
+}
+
+cursor_pos_t create_cursor_pos(int x, int y) {
+  return (cursor_pos_t){.x = x, .y = y};
+}

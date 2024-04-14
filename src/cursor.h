@@ -11,6 +11,7 @@ void x_inc_cursor();
 void y_inc_cursor();
 void x_dec_cursor();
 void y_dec_cursor();
+cursor_pos_t get_current_cursor_pos();
 void move_cursor_up(int n);
 void move_cursor_down(int n);
 void move_cursor_left(int n);

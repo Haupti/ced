@@ -1,4 +1,5 @@
 #include "cursor.h"
+#include "mirror.h"
 #include "key_event_t.h"
 #include "vt.h"
 #include <stdio.h>
@@ -93,7 +94,10 @@ void handle_key_event(key_event_t *events, int event_count,
                (event.key >= CHAR_a && event.key <= CHAR_z) ||
                event.key == SPACE) {
       x_inc_cursor();
+      cursor_pos_t pos = get_current_cursor_pos();
       printf("%c", event.key);
+      set_char(pos.x, pos.y, event.key);
+
       report_events(events, event_count);
       return;
     }
