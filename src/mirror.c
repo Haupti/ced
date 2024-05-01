@@ -17,7 +17,7 @@ char *resize_data(char *data, size_t old_size, size_t new_size) {
     // TODO save current mirror to swp file
     err_exit("could not resize line, not enought memory");
   }
-  char *end_of_data = data + old_size;
+  char *end_of_data = ptr + old_size;
   memset((void *)(end_of_data), 0, (size_t)new_size - old_size);
   return ptr;
 }

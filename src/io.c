@@ -58,6 +58,7 @@ file_read_result create_read_text_from_file() {
   return result;
 }
 
+/*
 display_mirror *create_read_from_file() {
   file_read_result res = create_read_text_from_file();
   char *text_raw = res.data;
@@ -82,3 +83,4 @@ display_mirror *create_read_from_file() {
   }
   free(current_row);
 }
+*/
